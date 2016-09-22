@@ -30,26 +30,20 @@ package cloud.orbit.actors.extensions.mongodb;
 
 import cloud.orbit.actors.extensions.StorageExtension;
 import cloud.orbit.actors.extensions.json.ActorReferenceModule;
-import cloud.orbit.actors.runtime.RemoteReference;
 import cloud.orbit.actors.runtime.DefaultDescriptorFactory;
+import cloud.orbit.actors.runtime.RemoteReference;
 import cloud.orbit.concurrent.Task;
 import cloud.orbit.exception.UncheckedException;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.*;
+import org.apache.commons.lang3.StringUtils;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.internal.MongoJackModule;
 import org.mongojack.internal.object.BsonObjectTraversingParser;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
-
 import java.util.ArrayList;
+import java.util.List;
 
 public class MongoDBStorageExtension implements StorageExtension
 {
@@ -61,6 +55,7 @@ public class MongoDBStorageExtension implements StorageExtension
     private String database;
     private String host = "localhost";
     private int port = 27017;
+    private String hosts;
     private String password;
     private String name = "default";
 
@@ -82,6 +77,10 @@ public class MongoDBStorageExtension implements StorageExtension
     public void setUser(final String user)
     {
         this.user = user;
+    }
+
+    public void setHosts(String hosts) {
+        this.hosts = hosts;
     }
 
     public MongoDBStorageExtension()
@@ -107,7 +106,23 @@ public class MongoDBStorageExtension implements StorageExtension
         {
             credentials.add(MongoCredential.createPlainCredential(user, database, password.toCharArray()));
         }
-        mongoClient = new MongoClient(new ServerAddress(host, port), credentials);
+
+        if (StringUtils.isNotBlank(hosts)) {
+            List<ServerAddress> addresses = new ArrayList<>();
+
+            for (String hostAndPort : hosts.split(",")) {
+                String[] hostAndPortArray = hostAndPort.split(":");
+
+                String host = hostAndPortArray[0];
+                Integer port = Integer.valueOf(hostAndPortArray[1]);
+                addresses.add(new ServerAddress(host, port));
+            }
+
+            mongoClient = new MongoClient(addresses, credentials);
+        } else {
+            mongoClient = new MongoClient(new ServerAddress(host, port), credentials);
+        }
+
 
         return Task.done();
     }
