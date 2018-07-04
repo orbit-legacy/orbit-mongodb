@@ -42,7 +42,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <url>https://github.com/electronicarts/orbit-mongodb/</url>
 
     <properties>
-        <orbit.version>0.8.0</orbit.version>
+        <orbit.version>1.10.0</orbit.version>
     </properties>
 
     <scm>
